@@ -4,7 +4,7 @@ use std::{
 };
 
 fn main() {
-    let exercise_to_run: (u8, u8) = (1, 2);
+    let exercise_to_run: (u8, u8) = (2, 2);
 
     match exercise_to_run {
         (1, 1) => {
@@ -12,6 +12,12 @@ fn main() {
         }
         (1, 2) => {
             d1_part2();
+        }
+        (2, 1) => {
+            d2_part1();
+        }
+        (2, 2) => {
+            d2_part2();
         }
         _ => {}
     }
@@ -26,16 +32,9 @@ fn d1_part1() { //Simple, brute-force solution. May come back to refactor at a l
         match line {
             Ok(s) => {
                 let d: Vec<char> = s.chars().filter(|c| c.is_digit(10)).collect();
-                if d.len() == 1 {
-                    sum += (d[0].to_string() + &d[0].to_string())
-                        .parse::<u32>()
-                        .unwrap();
-                }
-                if d.len() > 1 {
-                    sum += (d[0].to_string() + &d[d.len() - 1].to_string())
-                        .parse::<u32>()
-                        .unwrap();
-                }
+                sum += (d[0].to_string() + &d[d.len() - 1].to_string())
+                    .parse::<u32>()
+                    .unwrap();
             }
             Err(e) => {
                 println!("{}", e);
@@ -82,11 +81,73 @@ fn d1_part2() { //Simple, brute-force solution. May come back to refactor at a l
                 digits.push(d.to_digit(10).unwrap())
             }
         }
-        if digits.len() >= 1 {
-            sum += (digits[0] * 10) + (digits[digits.len() - 1]);
-        }
-    }
+        sum += (digits[0] * 10) + (digits[digits.len() - 1]);
+     }
     println!("{sum}");
 }
 
+fn d2_part1() {
+    let file = File::open("./src/d2_part1_data.txt").unwrap();
+    let reader = BufReader::new(file);
+    let mut games: Vec<i32> = vec![];
+    let mut linenum = 1;
 
+    for line in reader.lines() {
+        let mut red = 0;
+        let mut green = 0;
+        let mut blue = 0;
+
+        let uline = line.unwrap();
+        let parsed_line: Vec<&str> = uline.as_str()[uline.find(":").unwrap_or(0)+1..].trim().split(";").collect();
+
+        for group in parsed_line {
+            let set: Vec<&str> = group.trim().split(",").collect();
+            for c in set {
+                let cube: Vec<&str> = c.trim().split(" ").collect();
+                match cube[1] {
+                    "red" => { red = red.max(cube[0].parse::<u32>().unwrap_or(0)); },
+                    "green" => { green = green.max(cube[0].parse::<u32>().unwrap_or(0)); },
+                    "blue" => { blue = blue.max(cube[0].parse::<u32>().unwrap_or(0)); },
+                    _ => {},
+                };
+            }
+        }
+        if red <= 12 && green <= 13 && blue <= 14 {
+            games.push(linenum);
+        };
+        linenum += 1
+    }
+    println!("{}", games.iter().sum::<i32>());
+}
+
+fn d2_part2() {
+    let file = File::open("./src/d2_part1_data.txt").unwrap();
+    let reader = BufReader::new(file);    
+
+    let mut games: Vec<u32> = vec![];
+
+    for line in reader.lines() {
+        let mut red = 0;
+        let mut green = 0;
+        let mut blue = 0;
+
+        let uline = line.unwrap();
+        let parsed_line: Vec<&str> = uline.as_str()[uline.find(":").unwrap_or(0)+1..].trim().split(";").collect();
+
+        for group in parsed_line {
+            let set: Vec<&str> = group.trim().split(",").collect();
+            for c in set {
+                let cube: Vec<&str> = c.trim().split(" ").collect();
+                match cube[1] {
+                    "red" => { red = red.max(cube[0].parse::<u32>().unwrap_or(0)); },
+                    "green" => { green = green.max(cube[0].parse::<u32>().unwrap_or(0)); },
+                    "blue" => { blue = blue.max(cube[0].parse::<u32>().unwrap_or(0)); },
+                    _ => {},
+                };
+            }
+        }
+        games.push(red * green * blue);
+    }
+    println!("{}", games.iter().sum::<u32>());
+
+}
