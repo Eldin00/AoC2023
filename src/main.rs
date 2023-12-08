@@ -3,8 +3,8 @@ use std::{
     io::{BufRead, BufReader},
 };
 
-fn main() {
-    let exercise_to_run: (u8, u8) = (2, 2);
+fn main() { 
+    let exercise_to_run: (u8, u8) = (3, 2);
 
     match exercise_to_run {
         (1, 1) => {
@@ -19,11 +19,19 @@ fn main() {
         (2, 2) => {
             d2_part2();
         }
+        (3, 1) => {
+            d3_part1();
+        }
+        (3, 2) => {
+            d3_part2();
+        }
         _ => {}
     }
 }
 
-fn d1_part1() { //Simple, brute-force solution. May come back to refactor at a later time.
+//most of these are simple and/or brute force solutions. I may revisit and try to refactor them into something more elegant in the future.
+
+fn d1_part1() { 
     let file = File::open("./src/d1_part1_data.txt").unwrap();
     let reader = BufReader::new(file);
     let mut sum: u32 = 0;
@@ -44,7 +52,7 @@ fn d1_part1() { //Simple, brute-force solution. May come back to refactor at a l
     println!("{sum}");
 }
 
-fn d1_part2() { //Simple, brute-force solution. May come back to refactor at a later time.
+fn d1_part2() { 
     let file = File::open("./src/d1_part1_data.txt").unwrap();
     let reader = BufReader::new(file);
     let mut sum: u32 = 0;
@@ -151,3 +159,185 @@ fn d2_part2() {
     println!("{}", games.iter().sum::<u32>());
 
 }
+
+#[derive(Clone, Debug)]
+struct D3P1Line {
+    numbers: Vec<(usize, String)>,
+    symbols: Vec<usize>,
+}
+
+impl D3P1Line {
+    fn new() -> D3P1Line {
+        D3P1Line { numbers: vec![], symbols: vec![] }
+    }
+
+    fn parse_line(&mut self, l: &str) -> D3P1Line {
+        let mut buf: String = String::from("");
+        let mut index: usize = 0;
+        let mut offset = 0;
+        for c in l.chars() {
+            match c {
+                '.' => { 
+                    if !buf.is_empty() {
+                        self.numbers.push((index, buf.clone()));
+                        buf.clear();
+                    } 
+                },
+                '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9' => {
+                    if buf.is_empty() {
+                        index = offset as usize;
+                    }
+                    buf.push(c);
+                },
+                _ => {
+                    if !buf.is_empty() {
+                        self.numbers.push((index, buf.clone()));
+                        buf.clear();
+                    }
+                    self.symbols.push(offset);
+                }
+            };
+            offset += 1;
+        }
+        if !buf.is_empty() {
+            self.numbers.push((index, buf.clone()));
+            buf.clear();
+        }
+    
+        self.clone()
+    }
+    
+}
+
+fn d3_part1() {
+    let file = File::open("./src/d3_part1_data.txt").unwrap();
+    let reader = BufReader::new(file);
+    let mut sum = 0;
+    let mut prev_line_parsed: D3P1Line = D3P1Line::new();
+
+    for line in reader.lines() {
+        let l = line.unwrap();
+        let line_parsed: D3P1Line = D3P1Line::new().parse_line(&l);
+        if prev_line_parsed.numbers.len() > 0 && line_parsed.symbols.len() > 0 {
+            for s in &line_parsed.symbols {
+                for n in &prev_line_parsed.numbers.clone() {
+                    if s + 1 >= n.0 && *s <= n.0 + n.1.len() {
+                        sum += n.1.parse::<i32>().unwrap_or(0);
+                    }
+                }
+            }
+        }
+        if line_parsed.numbers.len() > 0 {
+            if prev_line_parsed.symbols.len() > 0 {
+                for s in &prev_line_parsed.symbols {
+                    for n in &line_parsed.numbers.clone() {
+                        if s + 1 >= n.0 && *s <= n.0 + n.1.len() {
+                            sum += n.1.parse::<i32>().unwrap_or(0);
+                        }
+                    }
+                }
+            }
+            if line_parsed.symbols.len() > 0 {
+                for s in &line_parsed.symbols {
+                    for n in &line_parsed.numbers.clone() {
+                        if s + 1 >= n.0 && *s <= n.0 + n.1.len() {
+                            sum += n.1.parse::<i32>().unwrap_or(0);
+                        }
+                    }
+                }
+            }
+        }
+        prev_line_parsed = line_parsed.clone();
+    }
+    println!("{sum}");
+    
+}
+
+#[derive(Clone, Debug)]
+struct D3P2Line {
+    numbers: Vec<(usize, String)>,
+    symbols: Vec<usize>,
+}
+
+impl D3P2Line {
+    fn new() -> D3P2Line {
+        D3P2Line { numbers: vec![], symbols: vec![] }
+    }
+
+    fn parse_line(&mut self, l: &str) -> D3P2Line {
+        let mut buf: String = String::from("");
+        let mut index: usize = 0;
+        let mut offset = 0;
+        for c in l.chars() {
+            match c {
+                '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9' => {
+                    if buf.is_empty() {
+                        index = offset as usize;
+                    }
+                    buf.push(c);
+                },
+                '*' => {
+                    if !buf.is_empty() {
+                        self.numbers.push((index, buf.clone()));
+                        buf.clear();
+                    }
+                    self.symbols.push(offset);
+                }
+                _ => { 
+                    if !buf.is_empty() {
+                        self.numbers.push((index, buf.clone()));
+                        buf.clear();
+                    } 
+                },                
+            };
+            offset += 1;
+        }
+        if !buf.is_empty() {
+            self.numbers.push((index, buf.clone()));
+            buf.clear();
+        }
+    
+        self.clone()
+    }
+    
+}
+
+fn d3_part2() {
+    let file = File::open("./src/d3_part1_data.txt").unwrap();
+    let reader = BufReader::new(file);
+    let mut sum = 0;
+    
+    let lines: Vec<D3P2Line> = reader.lines().map(|line| {D3P2Line::new().parse_line(&line.unwrap())}).collect();
+    for i in 1..lines.len() {
+        for s in &lines[i].symbols {
+            let mut buf: Vec<i32> = vec![];
+            if i != 0 {
+                for n in &lines[i-1].numbers {
+                    if s + 1 >= n.0 && *s <= n.0 + n.1.len() {
+                        buf.push(n.1.parse::<i32>().unwrap_or(0));                    
+                    }
+                }
+            }
+            if i < lines.len() {
+                for n in &lines[i+1].numbers {
+                    if s + 1 >= n.0 && *s <= n.0 + n.1.len() {
+                        buf.push(n.1.parse::<i32>().unwrap_or(0));                    
+                    }
+                }
+            }
+            for n in &lines[i].numbers {
+                if s + 1 >= n.0 && *s <= n.0 + n.1.len() {
+                    buf.push(n.1.parse::<i32>().unwrap_or(0));                    
+                }
+            }
+            if buf.len() == 2 {
+                sum += buf[0] * buf[1];
+            }
+        }
+    }
+
+    println!("{sum}")
+}
+
+
+
