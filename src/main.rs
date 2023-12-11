@@ -1,10 +1,10 @@
 use std::{
     fs::File,
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader}, collections::HashMap,
 };
 
 fn main() { 
-    let exercise_to_run: (u8, u8) = (3, 2);
+    let exercise_to_run: (u8, u8) = (4, 2);
 
     match exercise_to_run {
         (1, 1) => {
@@ -24,6 +24,12 @@ fn main() {
         }
         (3, 2) => {
             d3_part2();
+        }
+        (4, 1) => {
+            d4_part1();
+        }
+        (4, 2) => {
+            d4_part2();
         }
         _ => {}
     }
@@ -267,7 +273,7 @@ impl D3P2Line {
     fn parse_line(&mut self, l: &str) -> D3P2Line {
         let mut buf: String = String::from("");
         let mut index: usize = 0;
-        let mut offset = 0;
+        let mut offset: usize = 0;
         for c in l.chars() {
             match c {
                 '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9' => {
@@ -338,6 +344,49 @@ fn d3_part2() {
 
     println!("{sum}")
 }
+
+fn d4_part1() {
+    let file = File::open("./src/d4_data.txt").unwrap();
+    let reader = BufReader::new(file);
+    let mut sum = 0;
+
+    for line in reader.lines() {
+        let pline = line.unwrap();
+        let split_line: Vec<&str> = pline[pline.find(":").unwrap_or(0)+1..].trim().split("|").collect();
+        let winners: Vec<i32> = split_line[0].trim().split(" ").filter(|value| !value.is_empty()).map(|value| { value.trim().parse::<i32>().unwrap_or(0)}).collect();
+        let numbers: Vec<i32> = split_line[1].trim().split(" ").filter(|value| !value.is_empty()).map(|value| { value.trim().parse::<i32>().unwrap_or(0)}).filter(|value| winners.contains(value)).collect();
+        if numbers.len() > 0 {
+            sum += 2_i32.pow(numbers.len() as u32 - 1);
+        }
+    }
+    println!("{sum}");
+}
+
+fn d4_part2() {
+    let file = File::open("./src/d4_data.txt").unwrap();
+    let reader = BufReader::new(file);
+    let mut copies: HashMap<i32, i32> = HashMap::new();
+    let mut card = 1;
+    let lines: Vec<String> = reader.lines().map(|l| l.unwrap_or(String::from(""))).collect();
+
+    for line in &lines {
+        copies.insert(card, copies.get(&card).unwrap_or(&0) + 1);
+        let split_line: Vec<&str> = line[line.find(":").unwrap_or(0)+1..].trim().split("|").collect();
+        let winners: Vec<i32> = split_line[0].trim().split(" ").filter(|value| !value.is_empty()).map(|value| { value.trim().parse::<i32>().unwrap_or(0)}).collect();
+        let numbers: Vec<i32> = split_line[1].trim().split(" ").filter(|value| !value.is_empty()).map(|value| { value.trim().parse::<i32>().unwrap_or(0)}).filter(|value| winners.contains(value)).collect();
+        if numbers.len() > 0 {
+            for i in card + 1..(numbers.len() as i32 + card + 1) {
+                if i <= lines.len() as i32 {
+                    copies.insert(i, copies.get(&i).unwrap_or(&0) + copies.get(&card).unwrap_or(&0));
+                } 
+            }
+        }
+        card += 1;
+    }
+    println!("{}", copies.values().sum::<i32>());
+}
+
+
 
 
 
