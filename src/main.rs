@@ -4,7 +4,7 @@ use std::{
 };
 
 fn main() { 
-    let exercise_to_run: (u8, u8) = (5,2);
+    let exercise_to_run: (u8, u8) = (6,2);
 
     match exercise_to_run {
         (1, 1) => {
@@ -37,7 +37,12 @@ fn main() {
         (5, 2) => {
             d5_part2();
         }
-        _ => {}
+        (6, 1) => {
+            d6_part1();
+        }
+        (6, 2) => {
+            d6_part2();
+        }        _ => {}
     }
 }
 
@@ -573,6 +578,33 @@ fn d5_part2() {
 
     println!("{min_loc}")
 
+}
+
+fn d6_part1() {
+    let file = File::open("./src/d6_data.txt").unwrap();
+    let reader = BufReader::new(file);
+    let mut product: i32 = 1;
+
+    let lines: Vec<String> = reader.lines().map(|v| v.unwrap()).collect();
+
+    let times: Vec<i32> = lines[0].split_whitespace().map(|v| v.parse::<i32>().unwrap_or(-1)).filter(|v| v > &0).collect();
+    let distance: Vec<i32> = lines[1].split_whitespace().map(|v| v.parse::<i32>().unwrap_or(-1)).filter(|v| v > &0).collect();
+
+    for i in 0..times.len() {
+        product *= (1..times[i]).map(|v| v * (times[i] - v)).filter(|v| v > &distance[i]).collect::<Vec<i32>>().len() as i32;
+    }
+    println!("{product}");
+}
+
+fn d6_part2() {
+    let file = File::open("./src/d6_data.txt").unwrap();
+    let reader = BufReader::new(file);
+
+    let lines: Vec<String> = reader.lines().map(|v| v.unwrap()).collect();
+    let times = lines[0].split(":").last().unwrap().chars().filter(|v| !v.is_whitespace()).collect::<String>().parse::<i64>().unwrap();
+    let distance = lines[1].split(":").last().unwrap().chars().filter(|v| !v.is_whitespace()).collect::<String>().parse::<i64>().unwrap();
+
+    println!("{}",(1..times).map(|v| v * (times - v)).filter(|v| v > &distance).collect::<Vec<i64>>().len());
 }
 
 
