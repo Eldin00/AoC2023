@@ -1,10 +1,10 @@
 use std::{
     fs::File,
-    io::{BufRead, BufReader}, collections::HashMap,
+    io::{BufRead, BufReader}, collections::HashMap, cmp::Ordering,
 };
 
 fn main() { 
-    let exercise_to_run: (u8, u8) = (6,2);
+    let exercise_to_run: (u8, u8) = (7,2);
 
     match exercise_to_run {
         (1, 1) => {
@@ -42,7 +42,14 @@ fn main() {
         }
         (6, 2) => {
             d6_part2();
-        }        _ => {}
+        }       
+        (7, 1) => {
+            d7_part1();
+        }
+        (7, 2) => {
+            d7_part2();
+        }       
+         _ => {}
     }
 }
 
@@ -439,14 +446,14 @@ fn d5_part1() {
     let file = File::open("./src/d5_data.txt").unwrap();
     let reader = BufReader::new(file);
     let mut maps = D5Maps::new();
-    let mut seeds: Vec<i32> = vec![];
+    let mut seeds: Vec<i64> = vec![];
     let mut current_map = -1;
     let mut locations: Vec<i64> = vec![];
 
     for line in reader.lines() {
         let pline = line.unwrap_or(String::from(""));
         if pline.starts_with("seeds") {
-            seeds = pline.split(" ").map(|value| value.parse::<i32>().unwrap_or(0)).collect::<Vec<i32>>()[1..].to_vec();
+            seeds = pline.split(" ").map(|value| value.parse::<i64>().unwrap_or(0)).collect::<Vec<i64>>()[1..].to_vec();
         } else if pline.starts_with("seed-to-") {
             current_map = 0;
         } else if pline.starts_with("soil-to-") {
@@ -571,7 +578,7 @@ fn d5_part2() {
             for m in &maps.humid_to_loc {
                 if value >= m.range_begin && value <= m.range_end { value += m.offset; break; }
             }
-            min_loc = if value < min_loc { value} else {min_loc};
+            min_loc = if value < min_loc { value } else { min_loc };
         }
         i += 2;
     }
@@ -587,8 +594,8 @@ fn d6_part1() {
 
     let lines: Vec<String> = reader.lines().map(|v| v.unwrap()).collect();
 
-    let times: Vec<i32> = lines[0].split_whitespace().map(|v| v.parse::<i32>().unwrap_or(-1)).filter(|v| v > &0).collect();
-    let distance: Vec<i32> = lines[1].split_whitespace().map(|v| v.parse::<i32>().unwrap_or(-1)).filter(|v| v > &0).collect();
+    let times: Vec<i32> = lines[0].split_whitespace().map(|v| v.parse::<i32>().unwrap()).filter(|v| v > &0).collect();
+    let distance: Vec<i32> = lines[1].split_whitespace().map(|v| v.parse::<i32>().unwrap()).filter(|v| v > &0).collect();
 
     for i in 0..times.len() {
         product *= (1..times[i]).map(|v| v * (times[i] - v)).filter(|v| v > &distance[i]).collect::<Vec<i32>>().len() as i32;
@@ -607,5 +614,174 @@ fn d6_part2() {
     println!("{}",(1..times).map(|v| v * (times - v)).filter(|v| v > &distance).collect::<Vec<i64>>().len());
 }
 
+#[derive(Debug, PartialEq, Eq)]
+struct D7P1Hand {
+    cards: Vec<char>,
+    bid: i32, 
+    score: u8
+}
+
+impl D7P1Hand {
+    fn parse(input: &str) -> D7P1Hand {
+        let tmp: Vec<&str> = input.split_whitespace().collect();
+        let tcards = tmp[0].chars().collect::<Vec<char>>();
+        let mut hand_type: HashMap<char, u8> = HashMap::new();
+        let mut tscore: u8 = 0;
+        let mut t: Vec<&u8> = vec![];
+        for c in &tcards {
+            hand_type.entry(*c).and_modify(|i| *i+=1).or_insert(1);
+             t = hand_type.values().collect();
+        }
+        t.sort();
+        tscore = match t[..] {
+            [5] => 7,               // 5 of a kind
+            [1,4] => 6,             // 4 of a kind
+            [2,3] => 5,             // full house
+            [1,1,3] => 4,           // 3 of a kind
+            [1,2,2] => 3,           // 2 pair
+            [1,1,1,2] => 2,         // 1 pair
+            [1,1,1,1,1] => 1,       // high card
+            _ => { println!("This shouldn't happen!"); 0 }, // shouldn't happen.
+        };
+        D7P1Hand { cards: tcards, bid: tmp[1].trim().parse::<i32>().unwrap_or(0), score: tscore }
+    }
+}
+
+impl Ord for D7P1Hand {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let card_values: HashMap<char,u8> = HashMap::from([('2',2),('3',3),('4',4),('5',5),('6',6),('7',7),('8',8),('9',9),('T',10),('J',11),('Q',12),('K',13),('A',14)]);
+        let mut ord = self.score.cmp(&other.score);
+        if ord != Ordering::Equal { return ord }
+        for i in 0..self.cards.len() {
+            ord = card_values[&self.cards[i]].cmp(&card_values[&other.cards[i]]);
+            if ord != Ordering::Equal {
+                return ord;
+            }
+        }
+        ord
+    }
+}
+
+impl PartialOrd for D7P1Hand {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering>
+    {
+        let card_values: HashMap<char,u8> = HashMap::from([('2',2),('3',3),('4',4),('5',5),('6',6),('7',7),('8',8),('9',9),('T',10),('J',11),('Q',12),('K',13),('A',14)]);
+        let mut ord = self.score.partial_cmp(&other.score);
+        if ord != Some(Ordering::Equal) { return ord }
+        for i in 0..self.cards.len() {
+            ord = card_values[&self.cards[i]].partial_cmp(&card_values[&other.cards[i]]);
+            if ord != Some(Ordering::Equal) && ord.is_some() {
+                return ord;
+            }
+        }
+        ord
+    }
+}
+
+fn d7_part1() {
+    let file = File::open("./src/d7_data.txt").unwrap();
+    let reader = BufReader::new(file);
+
+    let mut total = 0;
+    let mut hands: Vec<D7P1Hand> = reader.lines().map(|v| D7P1Hand::parse(&v.unwrap())).collect();
+    hands.sort();
+    for i in 0..hands.len(){
+        total += (i + 1) as i32 * hands[i].bid;
+    }    
+    println!("{total}");
+}
+
+#[derive(Debug, PartialEq, Eq)]
+struct D7P2Hand {
+    cards: Vec<char>,
+    bid: i32, 
+    score: u8
+}
+
+impl D7P2Hand {
+    fn parse(input: &str) -> D7P2Hand {
+        let tmp: Vec<&str> = input.split_whitespace().collect();
+        let tcards = tmp[0].chars().collect::<Vec<char>>();
+        let mut hand_type: HashMap<char, u8> = HashMap::new();
+        let mut tscore: u8 = 0;
+        let mut t: Vec<&u8> = vec![];
+        let mut jokers: u8 = 0;
+        for c in &tcards {
+            if *c == 'J'
+            {
+                jokers += 1;
+            } else {
+                hand_type.entry(*c).and_modify(|i| *i+=1).or_insert(1);
+            }
+        }
+        if jokers > 0 {
+            let mut v: Vec<&char> = hand_type.keys().map(|k| k).collect();
+            if v.len() == 0 {
+                hand_type.insert('J', jokers);
+            } else {
+                println!("{tcards:?}");
+                v.sort_by(|a,b| hand_type[b].cmp(&hand_type[a]));
+                hand_type.entry(*v[0]).and_modify(|i| *i+=jokers);
+            }
+        }
+        t = hand_type.values().collect::<Vec<&u8>>().clone();
+        t.sort();
+        tscore = match t[..] {
+            [5] => 7,               // 5 of a kind
+            [1,4] => 6,             // 4 of a kind
+            [2,3] => 5,             // full house
+            [1,1,3] => 4,           // 3 of a kind
+            [1,2,2] => 3,           // 2 pair
+            [1,1,1,2] => 2,         // 1 pair
+            [1,1,1,1,1] => 1,       // high card
+            _ => { println!("This shouldn't happen!"); 0 }, // shouldn't happen.
+        };
+        D7P2Hand { cards: tcards, bid: tmp[1].trim().parse::<i32>().unwrap_or(0), score: tscore }
+    }
+}
+
+impl Ord for D7P2Hand {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let card_values: HashMap<char,u8> = HashMap::from([('2',2),('3',3),('4',4),('5',5),('6',6),('7',7),('8',8),('9',9),('T',10),('J',1),('Q',12),('K',13),('A',14)]);
+        let mut ord = self.score.cmp(&other.score);
+        if ord != Ordering::Equal { return ord }
+        for i in 0..self.cards.len() {
+            ord = card_values[&self.cards[i]].cmp(&card_values[&other.cards[i]]);
+            if ord != Ordering::Equal {
+                return ord;
+            }
+        }
+        ord
+    }
+}
+
+impl PartialOrd for D7P2Hand {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering>
+    {
+        let card_values: HashMap<char,u8> = HashMap::from([('2',2),('3',3),('4',4),('5',5),('6',6),('7',7),('8',8),('9',9),('T',10),('J',1),('Q',12),('K',13),('A',14)]);
+        let mut ord = self.score.partial_cmp(&other.score);
+        if ord != Some(Ordering::Equal) { return ord }
+        for i in 0..self.cards.len() {
+            ord = card_values[&self.cards[i]].partial_cmp(&card_values[&other.cards[i]]);
+            if ord != Some(Ordering::Equal) && ord.is_some() {
+                return ord;
+            }
+        }
+        ord
+    }
+}
+
+
+fn d7_part2() {
+    let file = File::open("./src/d7_data.txt").unwrap();
+    let reader = BufReader::new(file);
+
+    let mut total = 0;
+    let mut hands: Vec<D7P2Hand> = reader.lines().map(|v| D7P2Hand::parse(&v.unwrap())).collect();
+    hands.sort();
+    for i in 0..hands.len(){
+        total += (i + 1) as i32 * hands[i].bid;
+    }    
+    println!("{total}");}
 
 
