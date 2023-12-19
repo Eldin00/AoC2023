@@ -4,7 +4,7 @@ use std::{
 };
 
 fn main() { 
-    let exercise_to_run: (u8, u8) = (7,2);
+    let exercise_to_run: (u8, u8) = (8,2);
 
     match exercise_to_run {
         (1, 1) => {
@@ -48,6 +48,12 @@ fn main() {
         }
         (7, 2) => {
             d7_part2();
+        }             
+        (8, 1) => {
+            d8_part1();
+        }
+        (8, 2) => {
+            d8_part2();
         }       
          _ => {}
     }
@@ -626,7 +632,7 @@ impl D7P1Hand {
         let tmp: Vec<&str> = input.split_whitespace().collect();
         let tcards = tmp[0].chars().collect::<Vec<char>>();
         let mut hand_type: HashMap<char, u8> = HashMap::new();
-        let mut tscore: u8 = 0;
+        let tscore: u8;
         let mut t: Vec<&u8> = vec![];
         for c in &tcards {
             hand_type.entry(*c).and_modify(|i| *i+=1).or_insert(1);
@@ -703,8 +709,8 @@ impl D7P2Hand {
         let tmp: Vec<&str> = input.split_whitespace().collect();
         let tcards = tmp[0].chars().collect::<Vec<char>>();
         let mut hand_type: HashMap<char, u8> = HashMap::new();
-        let mut tscore: u8 = 0;
-        let mut t: Vec<&u8> = vec![];
+        let tscore: u8;
+        let mut t: Vec<&u8>;
         let mut jokers: u8 = 0;
         for c in &tcards {
             if *c == 'J'
@@ -719,7 +725,6 @@ impl D7P2Hand {
             if v.len() == 0 {
                 hand_type.insert('J', jokers);
             } else {
-                println!("{tcards:?}");
                 v.sort_by(|a,b| hand_type[b].cmp(&hand_type[a]));
                 hand_type.entry(*v[0]).and_modify(|i| *i+=jokers);
             }
@@ -782,6 +787,118 @@ fn d7_part2() {
     for i in 0..hands.len(){
         total += (i + 1) as i32 * hands[i].bid;
     }    
-    println!("{total}");}
+    println!("{total}");
+}
 
+fn d8_part1() {
+    let file = File::open("./src/d8_data.txt").unwrap();
+    let reader = BufReader::new(file);
+    let input: Vec<String> = reader.lines().map(|v| v.unwrap()).collect();
+    let mut nodes: HashMap<String, Vec<String>> = HashMap::new();
+    let mut steps = 0;
+
+    let directions: Vec<char> = input[0].chars().collect();
+    for i in 1..input.len()
+    {
+        if input[i].len() > 9 
+        {
+            let k = input[i][0..3].to_string();
+            let l = input[i][7..10].to_string();
+            let r = input[i][12..15].to_string();
+            nodes.insert(k, vec![l.clone(), r.clone()]);
+        }
+    }
+
+    let mut current_node = String::from("AAA");
+    let mut i: usize = 0;
+    loop {
+        steps += 1;
+        if directions[i] == 'L'
+        {
+            current_node = nodes[&current_node][0].clone();
+        } else {
+            current_node = nodes[&current_node][1].clone();
+        }
+        if current_node == String::from("ZZZ") 
+        {
+            break;
+        }
+        i += 1;
+        if i >= directions.len()
+        {
+            i = 0
+        } 
+
+    }
+    println!("{steps}");
+
+}
+
+fn d8_part2() {
+    let file = File::open("./src/d8_data.txt").unwrap();
+    let reader = BufReader::new(file);
+    let input: Vec<String> = reader.lines().map(|v| v.unwrap()).collect();
+    let mut nodes: HashMap<String, Vec<String>> = HashMap::new();
+    let mut current_nodes: Vec<String> = vec![];
+    let mut steps: u64 = 0;
+
+    let directions: Vec<usize> = input[0].chars().map(|v| {if v == 'L' { 0 } else { 1 }}).collect();
+    for i in 1..input.len()
+    {
+        if input[i].len() > 9 
+        {
+            let k = input[i][0..3].to_string();
+            let l = input[i][7..10].to_string();
+            let r = input[i][12..15].to_string();
+            nodes.insert(k.clone(), vec![l.clone(), r.clone()]);
+            
+            if k.ends_with('A') { current_nodes.push(k.clone()); }
+        }
+    }
+
+    let mut cycle_lengths: Vec<u64> = vec![0,0,0,0,0,0];
+    let mut i: usize = 0;
+    let mut found = 0;    
+    loop {
+        steps += 1;
+        current_nodes = current_nodes.iter().map(|v| nodes[v][directions[i]].clone()).collect();
+
+        if current_nodes.iter().any(|v| v.ends_with('Z'))
+        {
+            for j in 0..current_nodes.len()
+            {
+                if cycle_lengths[j] == 0 && current_nodes[j].ends_with('Z') { cycle_lengths[j] = steps; found += 1; }
+            }
+        }
+        if found >= current_nodes.len() { break; }
+        i += 1;
+        if i >= directions.len()
+        {
+            i = 0
+        } 
+    }
+    let mut count = lcm(cycle_lengths[0], cycle_lengths[1]);
+    for j in 2..cycle_lengths.len()
+    {
+        count = lcm(count, cycle_lengths[j]);
+    }
+
+    println!("{count}");
+
+}
+
+fn lcm(n1: u64, n2: u64) -> u64 {
+    let mut x: u64;
+    let mut y: u64;
+    (x, y) = if n1 > n2 {(n1, n2)} else {(n2, n1)};
+
+    let mut rem: u64 = x % y;
+    while rem != 0 
+    {
+        (x, y) = (y, rem);
+        rem = x % y;
+    }
+
+    n1*n2/y
+}
 
