@@ -4,7 +4,7 @@ use std::{
 };
 
 fn main() { 
-    let exercise_to_run: (u8, u8) = (8,2);
+    let exercise_to_run: (u8, u8) = (9,2);
 
     match exercise_to_run {
         (1, 1) => {
@@ -55,6 +55,12 @@ fn main() {
         (8, 2) => {
             d8_part2();
         }       
+        (9, 1) => {
+            d9_part1();
+        }
+        (9, 2) => {
+            d9_part2();
+        }    
          _ => {}
     }
 }
@@ -901,4 +907,54 @@ fn lcm(n1: u64, n2: u64) -> u64 {
 
     n1*n2/y
 }
+
+fn d9_differences(line: &Vec<i32>) -> Vec<i32> {
+    let mut v: Vec<i32> = vec![];
+    for i in 0..line.len()-1
+    {
+        v.push(line[i+1] - line[i]);
+    }
+    v
+}
+
+fn d9_part1() {
+    let file = File::open("./src/d9_data.txt").unwrap();
+    let reader = BufReader::new(file);
+    let lines: Vec<Vec<i32>> = reader.lines().map(|v| v.unwrap().split_whitespace().map(|i| i.parse::<i32>().unwrap()).collect()).collect();
+    let mut total = 0;
+    for line in lines
+    {
+        let mut differences = vec![line];
+        let mut tmp = differences[0].clone();
+        while !tmp.iter().all(|i| i == &0)
+        {
+            tmp = d9_differences(&tmp);
+            differences.push(tmp.clone());
+        }
+        total += differences.iter().fold(0, |acc: i32, v| acc + v.last().unwrap());
+    }
+    println!("{total}");
+}
+
+fn d9_part2() {
+    let file = File::open("./src/d9_data.txt").unwrap();
+    let reader = BufReader::new(file);
+    let lines: Vec<Vec<i32>> = reader.lines().map(|v| v.unwrap().split_whitespace().map(|i| i.parse::<i32>().unwrap()).collect()).collect();
+    let mut total = 0;
+    for line in lines
+    {
+        let mut differences = vec![line];
+        let mut tmp = differences[0].clone();
+        while !tmp.iter().all(|i| i == &0)
+        {
+            tmp = d9_differences(&tmp);
+            differences.push(tmp.clone());
+        }
+        total += differences.iter().rev().fold(0, |acc: i32, v| v.first().unwrap() - acc);
+    }
+    println!("{total}");
+}
+
+
+
 
