@@ -1,10 +1,10 @@
 use std::{
     fs::File,
-    io::{BufRead, BufReader}, collections::HashMap, cmp::Ordering,
+    io::{BufRead, BufReader}, collections::HashMap, cmp::Ordering, str::Lines,
 };
 
 fn main() { 
-    let exercise_to_run: (u8, u8) = (9,2);
+    let exercise_to_run: (u8, u8) = (10,2);
 
     match exercise_to_run {
         (1, 1) => {
@@ -60,6 +60,12 @@ fn main() {
         }
         (9, 2) => {
             d9_part2();
+        }    
+        (10, 1) => {
+            d10_part1();
+        }
+        (10, 2) => {
+            d10_part2();
         }    
          _ => {}
     }
@@ -955,6 +961,209 @@ fn d9_part2() {
     println!("{total}");
 }
 
+#[derive(Clone, Copy, Debug)]
+struct d10_tile {
+    value: char,
+    location: (usize, usize),
+    direction: u8,
+}
 
+impl d10_tile {
+    fn next_tile(&mut self, grid: &Vec<Vec<char>>) -> Self {
+        //println!("{self:?}");
+        match self.value {
+            '|' => {
+                if self.direction == 0 {
+                    self.location.0 -= 1;
+                } else { 
+                    self.location.0 += 1;
+                    self.direction = 2;
+                }
+                self.value = grid[self.location.0][self.location.1];
+            },
+            '-' => {
+                if self.direction == 1 {
+                    self.location.1 += 1;
+                } else { 
+                    self.location.1 -= 1;
+                    self.direction = 3;
+                }
+                self.value = grid[self.location.0][self.location.1];
+            },
+            'L' => {
+                if self.direction == 2 {
+                    self.location.1 += 1;
+                    self.direction = 1;
+                } else { 
+                    self.location.0 -= 1;
+                    self.direction = 0;
+                }
+                self.value = grid[self.location.0][self.location.1];
+            },
+            'J' => {
+                if self.direction == 1 {
+                    self.location.0 -= 1;
+                    self.direction = 0;
+                } else { 
+                    self.location.1 -= 1;
+                    self.direction = 3;
+                }
+                self.value = grid[self.location.0][self.location.1];
+            },
+            '7' => {
+                if self.direction == 1 {
+                    self.location.0 += 1;
+                    self.direction = 2;
+                } else { 
+                    self.location.1 -= 1;
+                    self.direction = 3;
+                }
+                self.value = grid[self.location.0][self.location.1];                
+            },
+            'F' => {
+                if self.direction == 0 {
+                    self.location.1 += 1;
+                    self.direction = 1;
+                } else { 
+                    self.location.0 += 1;
+                    self.direction = 2;
+                }
+                self.value = grid[self.location.0][self.location.1];                
+            },
+            'S' => {
+                if self.direction == 0 {
+                    self.location.0 -= 1;
+                } else if self.direction == 1 {
+                    self.location.1 += 1;
+                } else if self.direction == 2 {
+                    self.location.0 += 1;
+                } else { 
+                    self.location.1 -= 1;
+                }
+                self.value = grid[self.location.0][self.location.1];
+            },
+            _ => { println!("OPEN SPACE! SHOULDN'T BE HERE!");} 
+        };
+        self.clone()
+    }
+}
+
+fn d10_part1() {
+    let file = File::open("./src/d10_data.txt").unwrap();
+    let reader = BufReader::new(file);
+    let mut locations: Vec<d10_tile> = vec![];
+    
+    let grid: Vec<Vec<char>> = reader.lines().map(|v| v.unwrap().chars().collect()).collect();
+    for x in 0..grid.len()
+    {
+        for y in 0..grid[x].len()
+        {
+            if grid[x][y] == 'S' {
+                locations.push( d10_tile{value: 'S', location: (x, y), direction: 0 });
+                locations.push( d10_tile{value: 'S', location: (x, y), direction: 0 });
+                break;
+            }
+        }
+        if locations.len() > 0 {break;}
+    }
+    let mut tmp: usize = 0;
+    if locations[tmp].location.0 > 0 && "|F7".contains(grid[locations[tmp].location.0 - 1][locations[tmp].location.1]) { 
+        locations[tmp].direction = 0;
+        tmp += 1;
+    }
+    if locations[tmp].location.0 + 1 < grid.len() && "|JL".contains(grid[locations[tmp].location.0 + 1][locations[tmp].location.1]) {
+        locations[tmp].direction = 2;
+        tmp += 1;
+    }
+    if tmp < 2 && locations[tmp].location.1 + 1 < grid[0].len() && "-7J".contains(grid[locations[tmp].location.0][locations[tmp].location.1 + 1]) {
+        locations[tmp].direction = 1;
+        tmp += 1;
+    }
+    if tmp < 2 && locations[tmp].location.1 > 0 && "-FL".contains(grid[locations[tmp].location.0][locations[tmp].location.1 - 1]) { 
+        locations[tmp].direction = 3;
+    }
+    let mut i: u64 = 0;
+    loop {
+        i += 1;
+        locations[0].next_tile(&grid);
+        locations[1].next_tile(&grid);
+        if locations[0].location == locations[1].location { break; }
+    }
+    println!("{i:?}");
+
+}
+
+fn d10_part2() {
+    let file = File::open("./src/d10_data.txt").unwrap();
+    let reader = BufReader::new(file);
+    let mut locations: Vec<d10_tile> = vec![];
+    
+    let grid: Vec<Vec<char>> = reader.lines().map(|v| v.unwrap().chars().collect()).collect();
+    for x in 0..grid.len()
+    {
+        for y in 0..grid[x].len()
+        {
+            if grid[x][y] == 'S' {
+                locations.push( d10_tile{value: 'S', location: (x, y), direction: 0 });
+                locations.push( d10_tile{value: 'S', location: (x, y), direction: 0 });
+                break;
+            }
+        }
+        if locations.len() > 0 {break;}
+    }
+    let mut tmp: usize = 0;
+    if locations[tmp].location.0 > 0 && "|F7".contains(grid[locations[tmp].location.0 - 1][locations[tmp].location.1]) { 
+        locations[tmp].direction = 0;
+        tmp += 1;
+    }
+    if locations[tmp].location.0 + 1 < grid.len() && "|JL".contains(grid[locations[tmp].location.0 + 1][locations[tmp].location.1]) {
+        locations[tmp].direction = 2;
+        tmp += 1;
+    }
+    if tmp < 2 && locations[tmp].location.1 + 1 < grid[0].len() && "-7J".contains(grid[locations[tmp].location.0][locations[tmp].location.1 + 1]) {
+        locations[tmp].direction = 1;
+        tmp += 1;
+    }
+    if tmp < 2 && locations[tmp].location.1 > 0 && "-FL".contains(grid[locations[tmp].location.0][locations[tmp].location.1 - 1]) { 
+        locations[tmp].direction = 3;
+    }
+    let mut filtered_grid = grid.iter().map(|v| v.iter().map(|_| '.').collect::<Vec<char>>()).collect::<Vec<Vec<char>>>();
+    filtered_grid[locations[0].location.0][locations[0].location.1] = match (locations[0].direction, locations[1].direction) {
+        (0,1) => 'L',
+        (0,2) => '|',
+        (0,3) => 'J',
+        (1,2) => 'F',
+        (1,3) => '-',
+        (2,3) => '7',
+        _ => '.'
+    };
+    loop {
+        locations[0].next_tile(&grid);
+        locations[1].next_tile(&grid);
+        filtered_grid[locations[0].location.0][locations[0].location.1] = locations[0].value;
+        filtered_grid[locations[1].location.0][locations[1].location.1] = locations[1].value;
+        if locations[0].location == locations[1].location { break; }
+    }
+
+    let mut inside_tiles = 0;
+    for i in 0..filtered_grid.len(){
+        let mut parity = 0;
+        let mut start_tile = ' ';
+        for j in 0..filtered_grid[i].len(){
+            match filtered_grid[i][j] {
+                '.' => { inside_tiles += parity % 2; start_tile = ' '; },
+                '|' => { parity += 1; start_tile = ' '; },
+                'F' => { start_tile = 'F'; } 
+                'L' => { start_tile = 'L'; }
+                'J' => { if start_tile == 'F' { parity += 1; start_tile = ' '; }}
+                '7' => { if start_tile == 'L' { parity += 1; start_tile = ' '; }}
+                _ => {}
+            }
+        }
+    }
+
+    println!("{inside_tiles:?}");
+
+}
 
 
