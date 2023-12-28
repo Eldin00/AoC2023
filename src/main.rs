@@ -1,10 +1,10 @@
 use std::{
     fs::File,
-    io::{BufRead, BufReader}, collections::HashMap, cmp::Ordering, str::Lines,
+    io::{BufRead, BufReader}, collections::HashMap, cmp::Ordering
 };
 
 fn main() { 
-    let exercise_to_run: (u8, u8) = (10,2);
+    let exercise_to_run: (u8, u8) = (11,2);
 
     match exercise_to_run {
         (1, 1) => {
@@ -66,6 +66,12 @@ fn main() {
         }
         (10, 2) => {
             d10_part2();
+        }    
+        (11, 1) => {
+            d11_part1();
+        }
+        (11, 2) => {
+            d11_part2();
         }    
          _ => {}
     }
@@ -1164,6 +1170,96 @@ fn d10_part2() {
 
     println!("{inside_tiles:?}");
 
+}
+
+fn d11_part1() {
+    let file = File::open("./src/d11_data.txt").unwrap();
+    let reader = BufReader::new(file);
+    let image: Vec<String> = reader.lines().map(|v| v.unwrap()).collect();
+    let mut empty_cols = vec![true; image[0].len()]; 
+    let mut empty_rows = vec![true; image.len()]; 
+    let mut galaxies: Vec<(usize,usize)> = vec![];
+    let mut i = 0;
+    for row in image {
+        let mut j = 0;
+        if row.contains('#') {
+            empty_rows[i] = false;
+            for c in row.chars(){
+                if c == '#'{
+                    galaxies.push((i,j));
+                    empty_cols[j] = false;
+                }
+                j += 1;
+            }
+        }
+        i += 1;
+    }
+    i = empty_cols.len();
+    while i > 0 {
+        i -= 1;
+        if empty_cols[i] {
+            galaxies = galaxies.iter().map(|v| { if v.1 > i {(v.0, v.1 + 1)} else {(v.0, v.1)} }).collect::<Vec<(usize, usize)>>();
+        }
+    }
+    i = empty_rows.len();
+    while i > 0 {
+        i -= 1;
+        if empty_rows[i] {
+            galaxies = galaxies.iter().map(|v| { if v.0 > i {(v.0 + 1, v.1)} else {(v.0, v.1)} }).collect::<Vec<(usize, usize)>>();
+        }
+    }
+    let mut total_distance = 0;
+    for i in 0..galaxies.len(){
+        for j in i..galaxies.len(){
+            total_distance += galaxies[i].0.abs_diff(galaxies[j].0) + galaxies[i].1.abs_diff(galaxies[j].1);
+        }
+    }
+    println!("{total_distance}");
+}
+
+fn d11_part2() {
+    let file = File::open("./src/d11_data.txt").unwrap();
+    let reader = BufReader::new(file);
+    let image: Vec<String> = reader.lines().map(|v| v.unwrap()).collect();
+    let mut empty_cols = vec![true; image[0].len()]; 
+    let mut empty_rows = vec![true; image.len()]; 
+    let mut galaxies: Vec<(usize,usize)> = vec![];
+    let mut i = 0;
+    for row in image {
+        let mut j = 0;
+        if row.contains('#') {
+            empty_rows[i] = false;
+            for c in row.chars(){
+                if c == '#'{
+                    galaxies.push((i,j));
+                    empty_cols[j] = false;
+                }
+                j += 1;
+            }
+        }
+        i += 1;
+    }
+    i = empty_cols.len();
+    while i > 0 {
+        i -= 1;
+        if empty_cols[i] {
+            galaxies = galaxies.iter().map(|v| { if v.1 > i {(v.0, v.1 + 999999)} else {(v.0, v.1)} }).collect::<Vec<(usize, usize)>>();
+        }
+    }
+    i = empty_rows.len();
+    while i > 0 {
+        i -= 1;
+        if empty_rows[i] {
+            galaxies = galaxies.iter().map(|v| { if v.0 > i {(v.0 + 999999, v.1)} else {(v.0, v.1)} }).collect::<Vec<(usize, usize)>>();
+        }
+    }
+    let mut total_distance = 0;
+    for i in 0..galaxies.len(){
+        for j in i..galaxies.len(){
+            total_distance += galaxies[i].0.abs_diff(galaxies[j].0) + galaxies[i].1.abs_diff(galaxies[j].1);
+        }
+    }
+    println!("{total_distance}");
 }
 
 
