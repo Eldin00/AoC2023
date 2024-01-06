@@ -4,7 +4,7 @@ use std::{
 };
 
 fn main() { 
-    let exercise_to_run: (u8, u8) = (11,2);
+    let exercise_to_run: (u8, u8) = (12,1);
 
     match exercise_to_run {
         (1, 1) => {
@@ -72,6 +72,12 @@ fn main() {
         }
         (11, 2) => {
             d11_part2();
+        }    
+        (12, 1) => {
+            d12_part1();
+        }
+        (12, 2) => {
+            d12_part2();
         }    
          _ => {}
     }
@@ -968,13 +974,13 @@ fn d9_part2() {
 }
 
 #[derive(Clone, Copy, Debug)]
-struct d10_tile {
+struct D10Tile {
     value: char,
     location: (usize, usize),
     direction: u8,
 }
 
-impl d10_tile {
+impl D10Tile {
     fn next_tile(&mut self, grid: &Vec<Vec<char>>) -> Self {
         //println!("{self:?}");
         match self.value {
@@ -1057,7 +1063,7 @@ impl d10_tile {
 fn d10_part1() {
     let file = File::open("./src/d10_data.txt").unwrap();
     let reader = BufReader::new(file);
-    let mut locations: Vec<d10_tile> = vec![];
+    let mut locations: Vec<D10Tile> = vec![];
     
     let grid: Vec<Vec<char>> = reader.lines().map(|v| v.unwrap().chars().collect()).collect();
     for x in 0..grid.len()
@@ -1065,8 +1071,8 @@ fn d10_part1() {
         for y in 0..grid[x].len()
         {
             if grid[x][y] == 'S' {
-                locations.push( d10_tile{value: 'S', location: (x, y), direction: 0 });
-                locations.push( d10_tile{value: 'S', location: (x, y), direction: 0 });
+                locations.push( D10Tile{value: 'S', location: (x, y), direction: 0 });
+                locations.push( D10Tile{value: 'S', location: (x, y), direction: 0 });
                 break;
             }
         }
@@ -1102,7 +1108,7 @@ fn d10_part1() {
 fn d10_part2() {
     let file = File::open("./src/d10_data.txt").unwrap();
     let reader = BufReader::new(file);
-    let mut locations: Vec<d10_tile> = vec![];
+    let mut locations: Vec<D10Tile> = vec![];
     
     let grid: Vec<Vec<char>> = reader.lines().map(|v| v.unwrap().chars().collect()).collect();
     for x in 0..grid.len()
@@ -1110,8 +1116,8 @@ fn d10_part2() {
         for y in 0..grid[x].len()
         {
             if grid[x][y] == 'S' {
-                locations.push( d10_tile{value: 'S', location: (x, y), direction: 0 });
-                locations.push( d10_tile{value: 'S', location: (x, y), direction: 0 });
+                locations.push( D10Tile{value: 'S', location: (x, y), direction: 0 });
+                locations.push( D10Tile{value: 'S', location: (x, y), direction: 0 });
                 break;
             }
         }
@@ -1262,4 +1268,26 @@ fn d11_part2() {
     println!("{total_distance}");
 }
 
+#[derive(Debug)]
+struct D12Line {
+    pattern: Vec<char>,
+    runs: Vec<u8>,
+}
+
+fn d12_part1() {
+    let file = File::open("./src/d12_data.sm.txt").unwrap();
+    let reader = BufReader::new(file);
+    let mut springs: Vec<D12Line> = vec![];
+    for line in reader.lines()
+    {
+        let t: Vec<String> = line.unwrap().split_whitespace().map(|v| String::from(v)).collect();
+        springs.push(D12Line{ pattern: t[0].chars().collect(), runs: t[1].trim().split(',').map(|v| v.parse::<u8>().unwrap()).collect() })
+    }
+    println!("{springs:?}");
+}
+
+fn d12_part2() {
+    let file = File::open("./src/d12_data.sm.txt").unwrap();
+    let reader = BufReader::new(file);
+}
 
