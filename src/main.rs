@@ -800,7 +800,6 @@ impl PartialOrd for D7P2Hand {
     }
 }
 
-
 fn d7_part2() {
     let file = File::open("./src/d7_data.txt").unwrap();
     let reader = BufReader::new(file);
@@ -1268,22 +1267,50 @@ fn d11_part2() {
     println!("{total_distance}");
 }
 
-#[derive(Debug)]
-struct D12Line {
-    pattern: Vec<char>,
-    runs: Vec<u8>,
+fn d12_enumerate_posibilities(pat: &str) -> Vec<String>{
+    let mut patterns: Vec<String> = vec![];
+    if pat.contains('?') {
+        patterns.append(&mut d12_enumerate_posibilities(pat.replacen('?',".",1).as_str()));
+        patterns.append(&mut d12_enumerate_posibilities(pat.replacen('?',"#",1).as_str()));
+    } else {
+        patterns.push(pat.to_string());
+    }
+    patterns
 }
 
-fn d12_part1() {
-    let file = File::open("./src/d12_data.sm.txt").unwrap();
+fn d12_test_pattern(pat: &str, runs: &Vec<u8>) -> bool
+{
+    let v: Vec<String> = pat.replace('.', " ").split_whitespace().map(|v| v.to_string()).collect();
+    if v.len() != runs.len() { return false; }
+    for i in 0..v.len()
+    {
+        if v[i].len() != runs[i] as usize { return false; }
+    }
+    true
+}
+
+fn d12_part1() { //ugly brute force solution. But fast enough for the one-off.
+    let file = File::open("./src/d12_data.txt").unwrap();
     let reader = BufReader::new(file);
-    let mut springs: Vec<D12Line> = vec![];
+    let mut patterns: Vec<String> = vec![];
+    let mut runs: Vec<Vec<u8>> = vec![]; 
     for line in reader.lines()
     {
         let t: Vec<String> = line.unwrap().split_whitespace().map(|v| String::from(v)).collect();
-        springs.push(D12Line{ pattern: t[0].chars().collect(), runs: t[1].trim().split(',').map(|v| v.parse::<u8>().unwrap()).collect() })
+        patterns.push(t[0].clone());
+        runs.push(t[1].trim().split(',').map(|v| v.parse::<u8>().unwrap()).collect())
     }
-    println!("{springs:?}");
+    let mut count = 0;
+    for i in 0..patterns.len(){
+        println!("{i}");
+        for v in d12_enumerate_posibilities(patterns[i].as_str())
+        {
+            
+            count += if d12_test_pattern(v.as_str(), &runs[i]) {/*println!("{}, {v}, {:?}", patterns[i], runs[i]);*/ 1} else {0};
+        }
+    }
+
+    println!("{count}");
 }
 
 fn d12_part2() {
